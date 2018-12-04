@@ -1,8 +1,4 @@
 #include "md5.h"
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
 
 using std::cout;
 using std::endl;
@@ -24,11 +20,11 @@ bit32 T[64] = {
     0xf4292244, 0x432aff97, 0xab9423a7, 0xfc93a039, 0x655b59c3, 0x8f0ccc92,
     0xffeff47d, 0x85845dd1, 0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
     0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391};
-int s[64] = {7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
+byte s[64] = {7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
              5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20,
              4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
              6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21};
-int X[4][16] = {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
+byte X[4][16] = {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
                 {1, 6, 11, 0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 1},
                 {5, 8, 11, 14, 1, 4, 7, 10, 13, 0, 3, 6, 9, 12, 15, 2},
                 {0, 7, 14, 5, 12, 3, 10, 1, 8, 15, 6, 13, 4, 11, 2, 9}};
@@ -74,14 +70,18 @@ void padding(const byte* data, size_t len) {
   paddingCount = paddingCount > 55 ? 119 - paddingCount
                                    : 55 - paddingCount;  // 填充0x0的个数
   BitSet32 bitset = BitSet32();
+  // 读取数据
   for (int i = 0; i < len; i++) {
     bitset.AddByte(data[i]);
   }
+  // 填充首位1
   bitset.AddByte(0x80);
+  // 填充0
   for (int i = 0; i < paddingCount; i++) {
     bitset.AddByte(0);
   }
   vector<bit32> parts = bitset.GetBitSet();
+  // 填充(长度 mod 2^64)
   parts.push_back((len * 8) & 0xffff);
   parts.push_back(((len * 8) >> 32) & 0xffff);
   MD5::parts = parts;
@@ -123,33 +123,23 @@ void H_MD5() {
         tc = b;
         td = c;
       }
-      // cout << j << endl;
-      // std::cout << ta << " " << tb << " " << tc << " " << td << " " << std::endl;
     }
     MD5::MD[0] += ta;
     MD5::MD[1] += tb;
     MD5::MD[2] += tc;
     MD5::MD[3] += td;
-    // std::cout << MD5::MD[0] << " " << MD5::MD[1] << " " << MD5::MD[2] << " "
-    //          << MD5::MD[3] << " " << std::endl;
   }
 }
 
 string getMD5(const byte* data, size_t len) {
   // 填充
   padding(data, len);
-  // for (int i = 0; i < MD5::parts.size(); i++) {
-  //   cout << "b " << i << " " << MD5::parts[i] << endl;
-  // }
   // MD5压缩函数
   H_MD5();
-
-  // std::cout << "Hello" << std::endl;
-  // std::cout << MD5::MD[0] << " " << MD5::MD[1] << " " << MD5::MD[2] << " "
-  //           << MD5::MD[3] << " " << std::endl;
-
+  // 对结果进行小端编码
   byte digest[16];
   encode(MD5::MD, digest, 16);
+  // 输出十六进制字符串
   std::ostringstream ss;
   ss << std::hex;
   for (int i = 0; i < 16; i++) {
