@@ -83,7 +83,7 @@ void padding(const byte* data, size_t len) {
   vector<bit32> parts = bitset.GetBitSet();
   // 填充(长度 mod 2^64)
   parts.push_back((len * 8) & 0xffff);
-  parts.push_back(((len * 8) >> 32) & 0xffff);
+  parts.push_back(((size_t)(len * 8) >> 32) & 0xffff);
   MD5::parts = parts;
 }
 
